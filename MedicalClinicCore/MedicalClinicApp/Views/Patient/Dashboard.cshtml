@@ -1,0 +1,88 @@
+@model MedicalClinicApp.ViewModels.PatientDashboardViewModel
+@{ ViewData["Title"] = "Patient Dashboard"; }
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="section-title"><i class="bi bi-person"></i> Welcome, @Model.Patient.FullName</h2>
+            <p class="text-muted">Primary Doctor: @(Model.Patient.Doctor?.FullName ?? "Not assigned")</p>
+        </div>
+        <div>
+            <a asp-action="NewAppointment" class="btn btn-primary me-2"><i class="bi bi-calendar-plus"></i> New Appointment</a>
+            <a asp-action="EditProfile" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i> Edit Profile</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card stat-card"><div class="stat-number">@Model.UpcomingAppointments.Count</div><div class="stat-label">Upcoming</div></div></div>
+        <div class="col-md-3"><div class="card stat-card"><div class="stat-number">@Model.Prescriptions.Count</div><div class="stat-label">Prescriptions</div></div></div>
+        <div class="col-md-3"><div class="card stat-card"><div class="stat-number">@Model.Invoices.Count</div><div class="stat-label">Invoices</div></div></div>
+        <div class="col-md-3"><div class="card stat-card"><div class="stat-number">@(Model.Patient.Insurance?.InsuranceName ?? "None")</div><div class="stat-label">Insurance</div></div></div>
+    </div>
+
+    <h4><i class="bi bi-calendar-check"></i> Upcoming Appointments</h4>
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Date</th><th>Time</th><th>Doctor</th><th>Office</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                @foreach (var a in Model.UpcomingAppointments)
+                {
+                    <tr>
+                        <td>@a.AppointmentDate?.ToString("MMM dd, yyyy")</td>
+                        <td>@a.AppointmentTime?.ToString(@"hh\:mm")</td>
+                        <td>@(a.Doctor?.FullName ?? "N/A")</td>
+                        <td>@(a.Office?.Address ?? "N/A")</td>
+                        <td>
+                            @if (a.PATIENT_CONFIRM == true) { <span class="badge-approved">Confirmed</span> }
+                            else if (a.Approval) { <span class="badge-pending">Needs Confirmation</span> }
+                            else { <span class="badge-pending">Pending Approval</span> }
+                        </td>
+                        <td>
+                            @if (a.PATIENT_CONFIRM != true && a.Approval)
+                            {
+                                <form asp-action="ConfirmAppointment" method="post" style="display:inline"><input type="hidden" name="id" value="@a.AppointmentID"/><button class="btn btn-sm btn-success"><i class="bi bi-check"></i> Confirm</button></form>
+                            }
+                            <form asp-action="CancelAppointment" method="post" style="display:inline"><input type="hidden" name="id" value="@a.AppointmentID"/><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel?')"><i class="bi bi-x"></i></button></form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.UpcomingAppointments.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">No upcoming appointments</td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h4><i class="bi bi-capsule"></i> Current Prescriptions</h4>
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Medication</th><th>Dosage</th><th>Frequency</th><th>Start</th><th>End</th><th>Doctor</th></tr></thead>
+                <tbody>
+                @foreach (var p in Model.Prescriptions)
+                {
+                    <tr><td>@p.Medication</td><td>@p.Dosage</td><td>@p.Frequency</td><td>@p.StartDate?.ToString("MMM dd, yyyy")</td><td>@p.EndDate?.ToString("MMM dd, yyyy")</td><td>@(p.Doctor?.FullName ?? "N/A")</td></tr>
+                }
+                @if (!Model.Prescriptions.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">No prescriptions</td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h4><i class="bi bi-receipt"></i> Invoices</h4>
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Invoice #</th><th>Total</th><th>Insurance Claim</th><th>Paid</th><th>Due Date</th><th>Balance</th></tr></thead>
+                <tbody>
+                @foreach (var i in Model.Invoices)
+                {
+                    var balance = (i.Total ?? 0) - (i.Claim ?? 0) - (i.PaidAmount ?? 0);
+                    <tr><td>@i.InvoiceID</td><td>@(i.Total?.ToString("C"))</td><td>@(i.Claim?.ToString("C"))</td><td>@(i.PaidAmount?.ToString("C"))</td><td>@i.DueDate?.ToString("MMM dd, yyyy")</td><td class="@(balance > 0 ? "text-danger fw-bold" : "text-success")">@balance.ToString("C")</td></tr>
+                }
+                @if (!Model.Invoices.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">No invoices</td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

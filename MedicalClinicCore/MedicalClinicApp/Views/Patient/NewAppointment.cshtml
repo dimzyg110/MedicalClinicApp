@@ -1,0 +1,28 @@
+@model MedicalClinicApp.ViewModels.NewAppointmentViewModel
+@{ ViewData["Title"] = "New Appointment"; }
+<div class="container mt-4">
+    <h2 class="section-title"><i class="bi bi-calendar-plus"></i> Schedule New Appointment</h2>
+    <div class="card p-4">
+        <form asp-action="NewAppointment" method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Doctor</label>
+                    <select asp-for="DoctorID" class="form-select">
+                        <option value="">Select a doctor...</option>
+                        @foreach (var d in Model.AvailableDoctors) { <option value="@d.DoctorID">@d.FullName - @d.Specialization</option> }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Office</label>
+                    <select asp-for="OfficeID" class="form-select">
+                        <option value="">Select an office...</option>
+                        @foreach (var o in Model.AvailableOffices) { <option value="@o.OfficeID">@o.Address</option> }
+                    </select>
+                </div>
+                <div class="col-md-6"><label class="form-label">Date</label><input asp-for="AppointmentDate" type="date" class="form-control" /></div>
+                <div class="col-md-6"><label class="form-label">Time</label><input asp-for="AppointmentTime" type="time" class="form-control" /></div>
+                <div class="col-12"><button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Schedule Appointment</button> <a asp-action="Dashboard" class="btn btn-outline-secondary">Cancel</a></div>
+            </div>
+        </form>
+    </div>
+</div>

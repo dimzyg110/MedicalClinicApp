@@ -1,0 +1,80 @@
+@model MedicalClinicApp.ViewModels.AdminDashboardViewModel
+@{ ViewData["Title"] = "Admin Dashboard"; }
+
+<div class="container mt-4">
+    <h2 class="section-title"><i class="bi bi-speedometer2"></i> Admin Dashboard</h2>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md col-6"><div class="card stat-card"><div class="stat-number">@Model.TotalDoctors</div><div class="stat-label">Doctors</div></div></div>
+        <div class="col-md col-6"><div class="card stat-card"><div class="stat-number">@Model.TotalNurses</div><div class="stat-label">Nurses</div></div></div>
+        <div class="col-md col-6"><div class="card stat-card"><div class="stat-number">@Model.TotalPatients</div><div class="stat-label">Patients</div></div></div>
+        <div class="col-md col-6"><div class="card stat-card"><div class="stat-number">@Model.TotalAppointments</div><div class="stat-label">Appointments</div></div></div>
+        <div class="col-md col-6"><div class="card stat-card"><div class="stat-number">@Model.TotalOffices</div><div class="stat-label">Offices</div></div></div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-auto"><a asp-action="AddPersonnel" class="btn btn-primary"><i class="bi bi-person-plus"></i> Add Personnel</a></div>
+        <div class="col-md-auto"><a asp-action="AddOffice" class="btn btn-success"><i class="bi bi-building"></i> Add Office</a></div>
+        <div class="col-md-auto"><a asp-action="Appointments" class="btn btn-info text-white"><i class="bi bi-calendar"></i> Appointments</a></div>
+        <div class="col-md-auto"><a asp-action="Invoices" class="btn btn-warning"><i class="bi bi-receipt"></i> Invoices</a></div>
+        <div class="col-md-auto"><a asp-action="Reports" class="btn btn-secondary"><i class="bi bi-file-medical"></i> Reports</a></div>
+        <div class="col-md-auto"><a asp-action="CreateLogin" class="btn btn-dark"><i class="bi bi-key"></i> Create Login</a></div>
+    </div>
+
+    <!-- Doctors -->
+    <h4 class="mt-4"><i class="bi bi-heart-pulse"></i> Doctors</h4>
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>ID</th><th>Name</th><th>Specialization</th><th>Email</th><th>Phone</th><th>Salary</th><th>Actions</th></tr></thead>
+                <tbody>
+                @foreach (var d in Model.Doctors)
+                {
+                    <tr>
+                        <td>@d.DoctorID</td><td>@d.FullName</td><td>@d.Specialization</td><td>@d.Email</td><td>@d.Phone</td><td>@(d.Salary?.ToString("C0"))</td>
+                        <td><form asp-action="RemovePersonnel" method="post" style="display:inline"><input type="hidden" name="type" value="Doctor"/><input type="hidden" name="id" value="@d.DoctorID"/><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this doctor?')"><i class="bi bi-trash"></i></button></form></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Nurses -->
+    <h4><i class="bi bi-clipboard2-pulse"></i> Nurses</h4>
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Pay</th><th>Actions</th></tr></thead>
+                <tbody>
+                @foreach (var n in Model.Nurses)
+                {
+                    <tr>
+                        <td>@n.NID</td><td>@n.FullName</td><td>@n.Email</td><td>@n.Phone</td><td>@(n.Pay?.ToString("C0"))</td>
+                        <td><form asp-action="RemovePersonnel" method="post" style="display:inline"><input type="hidden" name="type" value="Nurse"/><input type="hidden" name="id" value="@n.NID"/><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove?')"><i class="bi bi-trash"></i></button></form></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Offices -->
+    <h4><i class="bi bi-building"></i> Offices</h4>
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>ID</th><th>Address</th><th>Phone</th><th>Actions</th></tr></thead>
+                <tbody>
+                @foreach (var o in Model.Offices)
+                {
+                    <tr>
+                        <td>@o.OfficeID</td><td>@o.Address</td><td>@o.Phone</td>
+                        <td><form asp-action="RemoveOffice" method="post" style="display:inline"><input type="hidden" name="id" value="@o.OfficeID"/><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove?')"><i class="bi bi-trash"></i></button></form></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

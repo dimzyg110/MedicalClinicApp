@@ -1,0 +1,18 @@
+@model List<MedicalClinicApp.Models.VisitDetails>
+@{ ViewData["Title"] = "My Reports"; }
+<div class="container mt-4">
+    <h2 class="section-title"><i class="bi bi-file-medical"></i> My Visit Reports</h2>
+    <a asp-action="Dashboard" class="btn btn-outline-primary mb-3"><i class="bi bi-arrow-left"></i> Back</a>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>ID</th><th>Doctor</th><th>Diagnosis</th><th>Treatment</th><th>BP</th><th>HR</th><th>Notes</th></tr></thead>
+                <tbody>
+                @foreach (var r in Model)
+                { <tr><td>@r.ReportID</td><td>@(r.Doctor?.FullName ?? "N/A")</td><td>@r.Diagnosis</td><td>@r.Treatment</td><td>@r.BloodPressure</td><td>@r.HeartRate</td><td>@r.Notes</td></tr> }
+                @if (!Model.Any()) { <tr><td colspan="7" class="text-center text-muted py-4">No reports</td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

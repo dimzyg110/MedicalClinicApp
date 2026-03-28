@@ -1,0 +1,32 @@
+@model MedicalClinicApp.ViewModels.NewPersonnelViewModel
+@{ ViewData["Title"] = "Add Personnel"; }
+<div class="container mt-4">
+    <h2 class="section-title"><i class="bi bi-person-plus"></i> Add Personnel</h2>
+    <div class="card p-4">
+        <form asp-action="AddPersonnel" method="post">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Type</label>
+                    <select asp-for="Type" class="form-select"><option>Doctor</option><option>Nurse</option><option>Staff</option></select>
+                </div>
+                <div class="col-md-4"><label class="form-label">First Name</label><input asp-for="FName" class="form-control" required /></div>
+                <div class="col-md-4"><label class="form-label">Last Name</label><input asp-for="LName" class="form-control" required /></div>
+                <div class="col-md-4"><label class="form-label">Middle Name</label><input asp-for="MName" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label">Email</label><input asp-for="Email" type="email" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label">Phone</label><input asp-for="Phone" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label">Specialization (Doctor)</label><input asp-for="Specialization" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label">Salary</label><input asp-for="Salary" type="number" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label">Date of Birth</label><input asp-for="DOB" type="date" class="form-control" /></div>
+                <div class="col-md-4">
+                    <label class="form-label">Office</label>
+                    <select asp-for="OfficeID" class="form-select"><option value="">None</option>@foreach (var o in Model.Offices) { <option value="@o.OfficeID">@o.Address</option> }</select>
+                </div>
+                <div class="col-md-4"><label class="form-label">Role (Staff)</label><input asp-for="Role" class="form-control" /></div>
+                <div class="col-12"><hr/><h5>Login Credentials (optional)</h5></div>
+                <div class="col-md-6"><label class="form-label">Username</label><input asp-for="Username" class="form-control" /></div>
+                <div class="col-md-6"><label class="form-label">Password</label><input asp-for="Password" class="form-control" value="123" /></div>
+                <div class="col-12"><button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Add</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></div>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,49 @@
+@model MedicalClinicApp.ViewModels.DoctorDashboardViewModel
+@{ ViewData["Title"] = "Doctor Dashboard"; }
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="section-title"><i class="bi bi-heart-pulse"></i> Welcome, @Model.Doctor.FullName</h2>
+            <p class="text-muted"><i class="bi bi-geo-alt"></i> Today's Office: @Model.OfficeLocation</p>
+        </div>
+        <div>
+            <a asp-action="Patients" class="btn btn-outline-primary me-2"><i class="bi bi-people"></i> My Patients</a>
+            <a asp-action="Prescriptions" class="btn btn-outline-success"><i class="bi bi-capsule"></i> Prescriptions</a>
+        </div>
+    </div>
+
+    <h4><i class="bi bi-calendar-check"></i> Upcoming Appointments</h4>
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Date</th><th>Time</th><th>Patient</th><th>Office</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                @foreach (var a in Model.UpcomingAppointments)
+                {
+                    <tr>
+                        <td>@a.AppointmentDate?.ToString("MMM dd, yyyy")</td>
+                        <td>@a.AppointmentTime?.ToString(@"hh\:mm")</td>
+                        <td>@(a.Patient?.FullName ?? "N/A")</td>
+                        <td>@(a.Office?.Address ?? "N/A")</td>
+                        <td>
+                            @if (a.Approval) { <span class="badge-approved">Approved</span> }
+                            else { <span class="badge-pending">Pending</span> }
+                        </td>
+                        <td>
+                            @if (!a.Approval)
+                            {
+                                <form asp-action="ApproveAppointment" method="post" style="display:inline"><input type="hidden" name="id" value="@a.AppointmentID"/><button class="btn btn-sm btn-success"><i class="bi bi-check"></i></button></form>
+                            }
+                            <a asp-action="CreateReport" asp-route-appointmentId="@a.AppointmentID" class="btn btn-sm btn-info text-white"><i class="bi bi-file-medical"></i></a>
+                            <a asp-action="CreatePrescription" asp-route-patientId="@a.PatientID" class="btn btn-sm btn-warning"><i class="bi bi-capsule"></i></a>
+                            <form asp-action="CancelAppointment" method="post" style="display:inline"><input type="hidden" name="id" value="@a.AppointmentID"/><input type="hidden" name="reason" value="Cancelled by doctor"/><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel?')"><i class="bi bi-x"></i></button></form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.UpcomingAppointments.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">No upcoming appointments</td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
