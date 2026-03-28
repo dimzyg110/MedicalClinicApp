@@ -13,24 +13,48 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Database - MySQL via connection string or DATABASE_URL
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
-if (string.IsNullOrEmpty(connectionString))
+// Database - Build connection string from Railway's individual MYSQL env vars
+string connectionString;
+
+var mysqlHost = Environment.GetEnvironmentVariable("MYSQLHOST");
+var mysqlUser = Environment.GetEnvironmentVariable("MYSQLUSER");
+var mysqlPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+var mysqlDatabase = Environment.GetEnvironmentVariable("MYSQLDATABASE");
+var mysqlPort = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
+
+if (!string.IsNullOrEmpty(mysqlHost) && !string.IsNullOrEmpty(mysqlUser))
 {
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Server=localhost;Database=medical_clinic;User=root;Password=root;";
+    // Use individual Railway MySQL variables (most reliable)
+    connectionString = $"Server={mysqlHost};Port={mysqlPort};Database={mysqlDatabase};User={mysqlUser};Password={mysqlPassword};SslMode=Preferred;AllowPublicKeyRetrieval=true;";
+    Console.WriteLine($"Using Railway MySQL vars: Server={mysqlHost}, Port={mysqlPort}, Database={mysqlDatabase}, User={mysqlUser}");
+}
+else
+{
+    // Fallback: try MYSQL_URL or DATABASE_URL
+    var urlString = Environment.GetEnvironmentVariable("MYSQL_URL")
+        ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+
+    if (!string.IsNullOrEmpty(urlString) && urlString.StartsWith("mysql://"))
+    {
+        var uri = new Uri(urlString);
+        var userInfo = uri.UserInfo.Split(':');
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+        var user = Uri.UnescapeDataString(userInfo[0]);
+        var database = uri.AbsolutePath.TrimStart('/');
+        connectionString = $"Server={uri.Host};Port={uri.Port};Database={database};User={user};Password={password};SslMode=Preferred;AllowPublicKeyRetrieval=true;";
+        Console.WriteLine($"Using MySQL URL: Server={uri.Host}, Port={uri.Port}, Database={database}");
+    }
+    else
+    {
+        connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? "Server=localhost;Port=3306;Database=medical_clinic;User=root;Password=root;SslMode=Preferred;AllowPublicKeyRetrieval=true;";
+        Console.WriteLine("Using default/local connection string");
+    }
 }
 
-// Convert mysql:// URL format to MySqlConnector format if needed
-if (connectionString.StartsWith("mysql://"))
-{
-    var uri = new Uri(connectionString);
-    var userInfo = uri.UserInfo.Split(':');
-    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};User={userInfo[0]};Password={userInfo[1]};SslMode=Required;";
-}
-
+var serverVersion = new MySqlServerVersion(new Version(8, 0, 0));
 builder.Services.AddDbContext<ClinicDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseMySql(connectionString, serverVersion));
 
 var app = builder.Build();
 
@@ -40,17 +64,21 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ClinicDbContext>();
     try
     {
+        Console.WriteLine("Running database migration...");
         db.Database.Migrate();
+        Console.WriteLine("Migration complete. Seeding...");
         DbSeeder.Seed(db);
+        Console.WriteLine("Seeding complete.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Database migration/seed error: {ex.Message}");
-        // Try EnsureCreated as fallback
+        Console.WriteLine($"Database migration error: {ex.Message}");
         try
         {
+            Console.WriteLine("Trying EnsureCreated fallback...");
             db.Database.EnsureCreated();
             DbSeeder.Seed(db);
+            Console.WriteLine("EnsureCreated + Seed complete.");
         }
         catch (Exception ex2)
         {
@@ -87,4 +115,5 @@ app.MapControllerRoute(
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
+Console.WriteLine($"Starting on port {port}...");
 app.Run();
