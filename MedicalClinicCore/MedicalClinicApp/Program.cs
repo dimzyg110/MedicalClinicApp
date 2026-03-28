@@ -24,13 +24,11 @@ var mysqlPort = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
 
 if (!string.IsNullOrEmpty(mysqlHost) && !string.IsNullOrEmpty(mysqlUser))
 {
-    // Use individual Railway MySQL variables (most reliable)
     connectionString = $"Server={mysqlHost};Port={mysqlPort};Database={mysqlDatabase};User={mysqlUser};Password={mysqlPassword};SslMode=Preferred;AllowPublicKeyRetrieval=true;";
     Console.WriteLine($"Using Railway MySQL vars: Server={mysqlHost}, Port={mysqlPort}, Database={mysqlDatabase}, User={mysqlUser}");
 }
 else
 {
-    // Fallback: try MYSQL_URL or DATABASE_URL
     var urlString = Environment.GetEnvironmentVariable("MYSQL_URL")
         ?? Environment.GetEnvironmentVariable("DATABASE_URL");
 
@@ -64,34 +62,23 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ClinicDbContext>();
     try
     {
-        Console.WriteLine("Running database migration...");
-        db.Database.Migrate();
-        Console.WriteLine("Migration complete. Seeding...");
+        Console.WriteLine("Running EnsureCreated...");
+        db.Database.EnsureCreated();
+        Console.WriteLine("Database created/verified. Seeding...");
         DbSeeder.Seed(db);
         Console.WriteLine("Seeding complete.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Database migration error: {ex.Message}");
-        try
-        {
-            Console.WriteLine("Trying EnsureCreated fallback...");
-            db.Database.EnsureCreated();
-            DbSeeder.Seed(db);
-            Console.WriteLine("EnsureCreated + Seed complete.");
-        }
-        catch (Exception ex2)
-        {
-            Console.WriteLine($"Database create fallback error: {ex2.Message}");
-        }
+        Console.WriteLine($"Database setup error: {ex.Message}");
+        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        if (ex.InnerException != null)
+            Console.WriteLine($"Inner: {ex.InnerException.Message}");
     }
 }
 
-// Configure pipeline
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-}
+// Always show detailed errors for now (temporary for debugging)
+app.UseDeveloperExceptionPage();
 
 // Handle forwarded headers from Railway proxy
 app.Use(async (context, next) =>
